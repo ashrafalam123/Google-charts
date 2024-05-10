@@ -8,7 +8,7 @@
     google.charts.load('current', {'packages':['corechart']});
 
     async function get_data() {
-      const res = await fetch("https://api.openweathermap.org/data/2.5/forecast?lat=35&lon=139&appid=24f83658a0da17d905f25afc9929e53e&units=imperial");
+      const res = await fetch("https://api.openweathermap.org/data/2.5/forecast?lat=35&lon=139&appid={Your_api_key}&units=imperial");
       const data = await res.json();
       const columns = data.list.map(item => ({
         datetime: new Date(item.dt_txt),
