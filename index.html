@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+
+    async function get_data() {
+      const res = await fetch("https://api.openweathermap.org/data/2.5/forecast?lat=35&lon=139&appid=24f83658a0da17d905f25afc9929e53e&units=imperial");
+      const data = await res.json();
+      const columns = data.list.map(item => ({
+        datetime: new Date(item.dt_txt),
+        temperature: item.main.temp,
+        temp_max: item.main.temp_max,
+        temp_min: item.main.temp_min,
+        description: item.weather[0].description,
+        windSpeed: item.wind.speed,
+        humidity: item.main.humidity,
+        clouds: item.clouds.all
+      }));
+
+      google.charts.setOnLoadCallback(() => {
+        drawPieChart(columns);
+        drawLineChart(columns);
+        drawLine2Chart(columns);
+        drawBarGraph(columns);
+      });
+    }
+
+    function drawPieChart(columns) {
+      const descriptions = columns.map(item => item.description);
+      const descriptionCounts = descriptions.reduce((acc, val) => {
+        acc[val] = (acc[val] || 0) + 1;
+        return acc;
+      }, {});
+
+      const chartData = [['Description', 'Count']];
+      for (const [description, count] of Object.entries(descriptionCounts)) {
+        chartData.push([description, count]);
+      }
+
+      const data = google.visualization.arrayToDataTable(chartData);
+      const options = {
+        title: 'Weather Description',
+        pieHole: 0.4
+      };
+
+      const chart = new google.visualization.PieChart(document.getElementById('piechart'));
+      chart.draw(data, options);
+    }
+
+    function drawLineChart(columns) {
+      const chartData = [['DateTime', 'Temperature', 'Humidity']];
+      columns.forEach(item => {
+        chartData.push([item.datetime, item.temperature, item.humidity]);
+      });
+
+      const data = google.visualization.arrayToDataTable(chartData);
+
+      const options = {
+        title: 'Temperature and Humidity Forecast',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: { targetAxisIndex: 0 },
+          1: { targetAxisIndex: 1 }
+        },
+        vAxes: {
+          0: { title: 'Temperature (°F)' },
+          1: { title: 'Humidity (%)' }
+        },
+        hAxis: {
+          title: 'Date and Time'
+        }
+      };
+
+      const chart = new google.visualization.LineChart(document.getElementById('line_chart'));
+      chart.draw(data, options);
+    }
+
+    function drawLine2Chart(columns) {
+      const chartData = [['DateTime', 'Temp_max', 'Temp_min']];
+      columns.forEach(item => {
+        chartData.push([item.datetime, item.temp_max, item.temp_min]);
+      });
+
+      const data = google.visualization.arrayToDataTable(chartData);
+
+      const options = {
+        title: 'Maximum and Minimum Temperatures',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: { targetAxisIndex: 0 },
+          1: { targetAxisIndex: 0 }
+        },
+        vAxis: {
+          title: 'Temperature (°F)'
+        },
+        hAxis: {
+          title: 'Date and Time'
+        }
+      };
+
+      const chart = new google.visualization.LineChart(document.getElementById('temp_line'));
+      chart.draw(data, options);
+    }
+
+    function drawBarGraph(columns) {
+      const chartData = [['DateTime', 'Cloud Coverage']];
+      columns.forEach(item => {
+        chartData.push([item.datetime, item.clouds]);
+      });
+
+      const data = google.visualization.arrayToDataTable(chartData);
+
+      const options = {
+        title: 'Cloud Coverage Over Time',
+        hAxis: {
+          title: 'Date and Time'
+        },
+        vAxis: {
+          title: 'Cloud Coverage'
+        }
+      };
+
+      const chart = new google.visualization.ColumnChart(document.getElementById('bar_chart'));
+      chart.draw(data, options);
+    }
+
+    get_data();
+  </script>
+  <title>Google Chart Example</title>
+</head>
+<body>
+  <div id="piechart" style="width: 900px; height: 500px;"></div>
+  <div id="line_chart" style="width: 900px; height: 500px;"></div>
+  <div id="temp_line" style="width: 900px; height: 500px;"></div>
+  <div id="bar_chart" style="width: 900px; height: 500px;"></div>
+</body>
+</html>
